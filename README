@@ -1,0 +1,82 @@
+# Curso de igualdad — publicación en GitHub Pages
+
+## Archivos del repositorio
+
+La web utiliza estos dos archivos:
+
+1. `index.html`
+2. `app.js`
+
+Los contenidos se leen del Google Sheets oficial **Curso de igualdad · Datos web**. No hace falta subir ningún Excel al repositorio.
+
+El archivo `script-hoja.gs` **no se sube a GitHub**: contiene la contraseña de Coral y se pega dentro de la propia hoja (ver más abajo).
+
+## Publicación
+
+En GitHub, entra en **Settings → Pages** y configura:
+
+- Source: **Deploy from a branch**
+- Branch: **main**
+- Folder: **/ (root)**
+
+Después guarda. GitHub mostrará la dirección pública cuando termine el despliegue.
+
+## Conectar la web con la hoja (una sola vez)
+
+La web guarda en la hoja las incidencias y evaluaciones del alumnado y la asistencia que marca Coral. Para ello necesita un pequeño script dentro de la hoja:
+
+1. Abre la hoja y entra en **Extensiones → Apps Script**.
+2. Borra lo que aparezca en el editor, pega el contenido completo de `script-hoja.gs` y guarda.
+3. Arriba, elige la función **preparar** y pulsa **Ejecutar**. Google pedirá permisos: acepta con la cuenta propietaria de la hoja. Si aparece «Google no ha verificado esta aplicación», pulsa **Configuración avanzada → Ir a… (no seguro)** y después **Permitir**. Se crearán las pestañas `INCIDENCIAS_WEB`, `EVALUACIONES_WEB` y `ASISTENCIA_WEB`.
+4. Pulsa **Implementar → Nueva implementación**. En el engranaje elige **Aplicación web**. Ejecutar como: **Yo**. Quién tiene acceso: **Cualquier usuario** (la opción que no pide cuenta de Google). Pulsa **Implementar** y copia la **URL de la aplicación web** (empieza por `https://script.google.com/macros/s/…/exec`).
+5. En la pestaña `CONFIGURACION`, añade una fila con `CLAVE` = `URL_SCRIPT` y `VALOR` = la URL copiada.
+
+La web lee esa URL al abrirse. Si cambias el código del script, actualiza la implementación existente (**Implementar → Gestionar implementaciones → editar → Versión: nueva versión**) para que la URL no cambie.
+
+### Contraseña de Coral
+
+Está al principio de `script-hoja.gs` (`CLAVE_PROFESORA`). Para cambiarla, edítala en Apps Script y actualiza la implementación como se indica arriba.
+
+## Qué se guarda en la hoja
+
+- `INCIDENCIAS_WEB`: una fila por cada ausencia, retraso, salida anticipada u otra incidencia que comunica un alumno o alumna desde el calendario. Para comunicar una incidencia hay que entrar con el nombre.
+- `EVALUACIONES_WEB`: una fila por alumno/a y módulo. No se guarda el nombre, solo un código (`TOKEN`) que evita duplicados; si la persona modifica su evaluación, se actualiza la misma fila.
+- `ASISTENCIA_WEB`: una fila por alumno/a y fecha de sesión, con el estado que marca Coral (Presente, Ausencia, Justificada, Retraso, Salida antes).
+
+Coral ve estos datos al entrar con su contraseña; el botón **Actualizar** los vuelve a leer. Si un alumno o alumna no tiene conexión al enviar, la web guarda el envío en su navegador y lo manda la próxima vez que abra la web.
+
+## Actualizar el contenido
+
+Para cambiar el programa, el calendario o los materiales, edita el Google Sheets. La web lee las pestañas `CONFIGURACION`, `CALENDARIO_WEB` y `MATERIALES_WEB` cada vez que se abre.
+
+### Añadir enlaces y materiales
+
+Utiliza una fila de `MATERIALES_WEB` por cada archivo o enlace:
+
+- `ID_MATERIAL`: identificador único, por ejemplo `MAT-107`.
+- `FECHA`: fecha de la sesión en formato `24/09/2026`.
+- `MODULO`: debe coincidir con el usado en `CALENDARIO_WEB`, por ejemplo `MF1453_3 · UF2683`.
+- `TITULO`: nombre que verá el alumnado.
+- `TIPO`: `Documento`, `Presentación`, `Vídeo`, `Lectura`, `Plantilla` o `Enlace`.
+- `ENLACE`: URL completa, comenzando por `https://`.
+- `FILA_ORIGEN`: referencia interna opcional.
+- `VISIBLE`: escribe `TRUE` para publicarlo y `FALSE` para ocultarlo.
+- `ACCESO`: `AMBOS` para que lo vea todo el mundo o `SOLO_PROFESORA` para que solo lo vea Coral.
+
+La web coloca el material en la sesión que tenga la misma fecha y el mismo módulo. También lo muestra en la pestaña Recursos. Los materiales sin URL válida no se enseñan al alumnado.
+
+En Google Drive, abre **Compartir → Acceso general** y decide si el archivo puede verlo cualquier persona con el enlace o solamente las cuentas autorizadas. Copia el enlace de visualización, no el código para insertar.
+
+### Lista del alumnado
+
+Los nombres con los que se puede entrar están en `app.js`, en la línea `STUDENT_NAMES`. Para añadir o quitar a alguien, edita esa lista y vuelve a subir `app.js`.
+
+## Prueba local
+
+No abras `index.html` con doble clic, porque el navegador puede bloquear la lectura de la hoja. Sirve la carpeta con un servidor local; por ejemplo:
+
+```bash
+python -m http.server 8000
+```
+
+Después abre `http://localhost:8000`.
